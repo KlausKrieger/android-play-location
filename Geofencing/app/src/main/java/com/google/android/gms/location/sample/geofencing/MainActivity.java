@@ -32,6 +32,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.gms.location.Geofence;
@@ -93,6 +94,9 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
 
+        Castle.loadWorld(this);
+        Castle.saveWorld(this);
+
         // Get the UI widgets.
         mAddGeofencesButton = (Button) findViewById(R.id.add_geofences_button);
         mRemoveGeofencesButton = (Button) findViewById(R.id.remove_geofences_button);
@@ -120,6 +124,26 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         } else {
             performPendingGeofenceTask();
         }
+
+
+
+        refreshStatus();
+    }
+
+    private void refreshStatus(){
+        TextView textView = (TextView) findViewById(R.id.textView);
+        String text = "Hauptburg: " + Castle.getWaypoints().get(0).getName();
+        // resources in castle-storage
+        for(Waypoint wp : Castle.getWaypoints().values()){
+            text += "\n" + Waypoint.RES_NAMES[wp.getNr()] + ": " + Castle.getRes(wp.getNr());
+        }
+        // outposts and their current storage
+        text += "\n\nAussenposten:";
+        for(Waypoint wp : Castle.getWaypoints().values()){
+            text += "\n" + wp.getName() + ": " + wp.getVisitCounts() + "x, ";
+            text += "in storage: " + wp.calcStorage();
+        }
+        textView.setText(text);
     }
 
     /**
@@ -241,18 +265,18 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
      * the user's location.
      */
     private void populateGeofenceList() {
-        for (Map.Entry<String, LatLng> entry : Constants.BAY_AREA_LANDMARKS.entrySet()) {
+        for (Map.Entry<Integer, Waypoint> entry : Castle.getWaypoints().entrySet()) {
 
             mGeofenceList.add(new Geofence.Builder()
                     // Set the request ID of the geofence. This is a string to identify this
                     // geofence.
-                    .setRequestId(entry.getKey())
+                    .setRequestId(entry.getKey()+"")
 
                     // Set the circular region of this geofence.
                     .setCircularRegion(
-                            entry.getValue().latitude,
-                            entry.getValue().longitude,
-                            Constants.GEOFENCE_RADIUS_IN_METERS
+                            entry.getValue().getKoords().latitude,
+                            entry.getValue().getKoords().longitude,
+                            Waypoint.GEOFENCE_RADIUS_IN_METERS
                     )
 
                     // Set the expiration duration of the geofence. This geofence gets automatically
@@ -261,8 +285,9 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
 
                     // Set the transition types of interest. Alerts are only generated for these
                     // transition. We track entry and exit transitions in this sample.
-                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER |
-                            Geofence.GEOFENCE_TRANSITION_EXIT)
+                    .setTransitionTypes(Geofence.GEOFENCE_TRANSITION_ENTER
+                          //  | Geofence.GEOFENCE_TRANSITION_EXIT
+                        )
 
                     // Create the geofence.
                     .build());

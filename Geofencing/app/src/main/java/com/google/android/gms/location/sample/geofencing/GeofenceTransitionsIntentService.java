@@ -32,6 +32,7 @@ import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -73,11 +74,24 @@ public class GeofenceTransitionsIntentService extends IntentService {
         int geofenceTransition = geofencingEvent.getGeofenceTransition();
 
         // Test that the reported transition was of interest.
-        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
-                geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
+        if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER
+             //   || geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT
+                ) {
 
             // Get the geofences that were triggered. A single event can trigger multiple geofences.
             List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
+
+            // harvest Waypoint...
+            for(Geofence g : triggeringGeofences){
+                Waypoint w = Castle.getWaypoints().get(Integer.parseInt(g.getRequestId()));
+                w.setVisitCounts(w.getVisitCounts()+1);
+                w.setLastVisitDate(new Date());
+
+                long harvest = w.harvest();
+                Castle.setRes(w.getNr(), Castle.getRes(w.getNr()) + harvest);
+
+                Castle.saveWorld(this);
+            }
 
             // Get the transition details as a String.
             String geofenceTransitionDetails = getGeofenceTransitionDetails(geofenceTransition,
@@ -106,11 +120,11 @@ public class GeofenceTransitionsIntentService extends IntentService {
         String geofenceTransitionString = getTransitionString(geofenceTransition);
 
         // Get the Ids of each geofence that was triggered.
-        ArrayList<String> triggeringGeofencesIdsList = new ArrayList<>();
+        ArrayList<String> triggeringGeofencesNamesList = new ArrayList<>();
         for (Geofence geofence : triggeringGeofences) {
-            triggeringGeofencesIdsList.add(geofence.getRequestId());
+            triggeringGeofencesNamesList.add(Waypoint.fromGeofence(geofence).getName());
         }
-        String triggeringGeofencesIdsString = TextUtils.join(", ",  triggeringGeofencesIdsList);
+        String triggeringGeofencesIdsString = TextUtils.join(", ",  triggeringGeofencesNamesList);
 
         return geofenceTransitionString + ": " + triggeringGeofencesIdsString;
     }

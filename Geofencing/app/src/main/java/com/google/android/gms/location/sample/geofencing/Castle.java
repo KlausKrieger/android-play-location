@@ -73,17 +73,8 @@ public class Castle {
 
             // waypoints
             String wps = p.getString("waypoints", null);
-            if (wps == null) { // TODO
-                    Waypoint wp;
-                    wp = new Waypoint(0, "Home", new LatLng(48.770303, 12.856623));
-                    waypoints.put(wp.getNr(), wp);
-
-                    wp = new Waypoint(1, "FFW", new LatLng(48.765591,12.862354));
-                    waypoints.put(wp.getNr(), wp);
-                    wp = new Waypoint(2, "Hügel", new LatLng(48.769001, 12.857483));
-                    waypoints.put(wp.getNr(), wp);
-                    wp = new Waypoint(3, "Tunnel", new LatLng(48.770392, 12.862328));
-                    waypoints.put(wp.getNr(), wp);
+            if (wps == null) {
+                ; // nix, müssen später vom user angelegt werden
             } else {
                 JSONObject allWPs = new JSONObject(wps);
                 JSONArray arr = allWPs.getJSONArray("waypoints");

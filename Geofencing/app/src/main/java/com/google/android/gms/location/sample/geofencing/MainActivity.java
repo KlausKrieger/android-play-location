@@ -87,6 +87,12 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
     private Button mAddGeofencesButton;
     private Button mRemoveGeofencesButton;
 
+    // Buttons for build/upgrade castle and towers
+    private Button mCastleButton;
+    private Button mTower1Button;
+    private Button mTower2Button;
+    private Button mTower3Button;
+
     private PendingGeofenceTask mPendingGeofenceTask = PendingGeofenceTask.NONE;
 
     @Override
@@ -95,19 +101,20 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         setContentView(R.layout.main_activity);
 
         Castle.loadWorld(this);
-        Castle.saveWorld(this);
 
         // Get the UI widgets.
         mAddGeofencesButton = (Button) findViewById(R.id.add_geofences_button);
         mRemoveGeofencesButton = (Button) findViewById(R.id.remove_geofences_button);
+        mCastleButton = (Button) findViewById(R.id.castleButton);
+        mTower1Button = (Button) findViewById(R.id.tower1Button);
+        mTower2Button = (Button) findViewById(R.id.tower2Button);
+        mTower3Button = (Button) findViewById(R.id.tower3Button);
 
         // Empty list for storing geofences.
         mGeofenceList = new ArrayList<>();
 
         // Initially set the PendingIntent used in addGeofences() and removeGeofences() to null.
         mGeofencePendingIntent = null;
-
-        setButtonsEnabledState();
 
         // Get the geofences used. Geofence data is hard coded in this sample.
         populateGeofenceList();
@@ -131,19 +138,64 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
     }
 
     private void refreshStatus(){
-        TextView textView = (TextView) findViewById(R.id.textView);
-        String text = "Hauptburg: " + Castle.getWaypoints().get(0).getName();
-        // resources in castle-storage
-        for(Waypoint wp : Castle.getWaypoints().values()){
-            text += "\n" + Waypoint.RES_NAMES[wp.getNr()] + ": " + Castle.getRes(wp.getNr());
+
+        setButtonsEnabledState();
+
+        // homebase text
+        String castleStatus = "Hauptburg: ";
+        if(Castle.getWaypoints().isEmpty()){
+            castleStatus += "- nicht erstellt -";
+        } else {
+            Waypoint w = Castle.getWaypoints().get(0);
+            castleStatus += "\n" + w.getName() + ": " + w.getVisitCounts() + "x\n";
+            castleStatus += "tax to collect: " + w.calcStorage() + " gold.";
         }
-        // outposts and their current storage
-        text += "\n\nAussenposten:";
-        for(Waypoint wp : Castle.getWaypoints().values()){
-            text += "\n" + wp.getName() + ": " + wp.getVisitCounts() + "x, ";
-            text += "in storage: " + wp.calcStorage();
+        // resources in home-storage
+        for(int i=0; i<Waypoint.RES_NAMES.length; i++){
+            castleStatus += "\n" + Waypoint.RES_NAMES[i] + ": " + Castle.getRes(i);
         }
-        textView.setText(text);
+        castleStatus += "\n";
+        TextView castleTextView = (TextView) findViewById(R.id.castleTextView);
+        castleTextView.setText(castleStatus);
+
+        // outpost 1
+        TextView tower1TextView = (TextView) findViewById(R.id.tower1TextView);
+        String tower1Status = "Aussenposten 1:";
+        if (Castle.getWaypoints().size() >=2){
+            Waypoint w = Castle.getWaypoints().get(1);
+            tower1Status += "\n" + w.getName() + ": " + w.getVisitCounts() + "x, ";
+            tower1Status += "in storage: " + w.calcStorage();
+        } else {
+            tower1Status += "- nicht erstellt -";
+        }
+        tower1TextView.setText(tower1Status);
+
+        // outpost 2
+        TextView tower2TextView = (TextView) findViewById(R.id.tower2TextView);
+        String tower2Status = "Aussenposten 2:";
+        if (Castle.getWaypoints().size() >=3){
+            Waypoint w = Castle.getWaypoints().get(2);
+            tower2Status += "\n" + w.getName() + ": " + w.getVisitCounts() + "x, ";
+            tower2Status += "in storage: " + w.calcStorage();
+        } else {
+            tower2Status += "- nicht erstellt -";
+        }
+        tower2TextView.setText(tower2Status);
+
+        // outpost 3
+        TextView tower3TextView = (TextView) findViewById(R.id.tower3TextView);
+        String tower3Status = "Aussenposten 3:";
+        if (Castle.getWaypoints().size() >=4){
+            Waypoint w = Castle.getWaypoints().get(3);
+            tower3Status += "\n" + w.getName() + ": " + w.getVisitCounts() + "x, ";
+            tower3Status += "in storage: " + w.calcStorage();
+        } else {
+            tower3Status += "- nicht erstellt -";
+        }
+        tower3TextView.setText(tower3Status);
+
+
+
     }
 
     /**
@@ -220,6 +272,59 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         mGeofencingClient.removeGeofences(getGeofencePendingIntent()).addOnCompleteListener(this);
     }
 
+    public void castleButtonHandler(View view){
+        if (Castle.getWaypoints().isEmpty()) {
+            Waypoint wp = new Waypoint(0, "Drosselnest", new LatLng(48.770303, 12.856623));
+            Castle.getWaypoints().put(wp.getNr(), wp);
+            Castle.saveWorld(this);
+            populateGeofenceList();
+            performPendingGeofenceTask();
+            refreshStatus();
+
+        } else {
+            // TODO upgrade?
+        }
+    }
+
+    public void tower1ButtonHandler(View view){
+        if (Castle.getWaypoints().size()<2) {
+            Waypoint wp = new Waypoint(1, "Hügelland", new LatLng(48.769001, 12.857483));
+            Castle.getWaypoints().put(wp.getNr(), wp);
+            Castle.saveWorld(this);
+            populateGeofenceList();
+            performPendingGeofenceTask();
+            refreshStatus();
+        } else {
+            // TODO upgrade?
+        }
+    }
+
+    public void tower2ButtonHandler(View view){
+        if (Castle.getWaypoints().size()<3) {
+            Waypoint wp = new Waypoint(2, "Steinfeld", new LatLng(48.770392, 12.862328));
+            Castle.getWaypoints().put(wp.getNr(), wp);
+            Castle.saveWorld(this);
+            populateGeofenceList();
+            performPendingGeofenceTask();
+            refreshStatus();
+        } else {
+            // TODO upgrade?
+        }
+    }
+
+    public void tower3ButtonHandler(View view){
+        if (Castle.getWaypoints().size()<4) {
+            Waypoint wp = new Waypoint(3, "Vulkan", new LatLng(48.765591,12.862354));
+            Castle.getWaypoints().put(wp.getNr(), wp);
+            Castle.saveWorld(this);
+            populateGeofenceList();
+            performPendingGeofenceTask();
+            refreshStatus();
+        } else {
+            // TODO upgrade?
+        }
+    }
+
     /**
      * Runs when the result of calling {@link #addGeofences()} and/or {@link #removeGeofences()}
      * is available.
@@ -229,10 +334,10 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
     public void onComplete(@NonNull Task<Void> task) {
         mPendingGeofenceTask = PendingGeofenceTask.NONE;
         if (task.isSuccessful()) {
-            updateGeofencesAdded(!getGeofencesAdded());
+            updateGeofencesAdded(!isGeofencesAdded());
             setButtonsEnabledState();
 
-            int messageId = getGeofencesAdded() ? R.string.geofences_added :
+            int messageId = isGeofencesAdded() ? R.string.geofences_added :
                     R.string.geofences_removed;
             Toast.makeText(this, getString(messageId), Toast.LENGTH_SHORT).show();
         } else {
@@ -265,8 +370,8 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
      * the user's location.
      */
     private void populateGeofenceList() {
+        mGeofenceList.clear();
         for (Map.Entry<Integer, Waypoint> entry : Castle.getWaypoints().entrySet()) {
-
             mGeofenceList.add(new Geofence.Builder()
                     // Set the request ID of the geofence. This is a string to identify this
                     // geofence.
@@ -300,13 +405,50 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
      * user has added geofences.
      */
     private void setButtonsEnabledState() {
-        if (getGeofencesAdded()) {
+
+        // location tracking on/off buttons
+        if(Castle.getWaypoints().isEmpty()){
             mAddGeofencesButton.setEnabled(false);
-            mRemoveGeofencesButton.setEnabled(true);
-        } else {
-            mAddGeofencesButton.setEnabled(true);
             mRemoveGeofencesButton.setEnabled(false);
+        }else{
+            if (isGeofencesAdded()) {
+                mAddGeofencesButton.setEnabled(false);
+                mRemoveGeofencesButton.setEnabled(true);
+            } else {
+                mAddGeofencesButton.setEnabled(true);
+                mRemoveGeofencesButton.setEnabled(false);
+            }
         }
+
+        // castle Button:
+        if(Castle.getWaypoints().isEmpty()){
+            mCastleButton.setEnabled(true);
+        } else {
+            mCastleButton.setEnabled(false);
+        }
+
+        // tower 1 button:
+        if(Castle.getWaypoints().size()==1){
+            mTower1Button.setEnabled(true);
+        } else {
+            mTower1Button.setEnabled(false);
+        }
+
+        // tower 2 button:
+        if(Castle.getWaypoints().size()==2){
+            mTower2Button.setEnabled(true);
+        } else {
+            mTower2Button.setEnabled(false);
+        }
+
+        // tower 3 button:
+        if(Castle.getWaypoints().size()==3){
+            mTower3Button.setEnabled(true);
+        } else {
+            mTower3Button.setEnabled(false);
+        }
+
+
     }
 
     /**
@@ -340,7 +482,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
     /**
      * Returns true if geofences were added, otherwise false.
      */
-    private boolean getGeofencesAdded() {
+    private boolean isGeofencesAdded() {
         return PreferenceManager.getDefaultSharedPreferences(this).getBoolean(
                 Constants.GEOFENCES_ADDED_KEY, false);
     }

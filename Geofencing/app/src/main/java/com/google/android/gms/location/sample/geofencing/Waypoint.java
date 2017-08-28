@@ -18,6 +18,8 @@ public class Waypoint {
 
     public static final String[] RES_NAMES = {"Gold", "Holz", "Stein", "Eisen"};
 
+    public static final String[] UPG_NAMES = {"Fahne", "Wachhäuschen", "Wachgebäude", "Wachgebäude mit Palisaden", "Kaserne", "Burg", "Festung", "Stronghold"};
+
     private int nr;
     private String name;
     private LatLng koords;
@@ -26,6 +28,7 @@ public class Waypoint {
     private long visitCounts = 0;
     private long growDuration = 20 * 1000; // 20sec
     private long storageCap = 3;
+    private int upgrades = 0;
 
     public Waypoint(int nr, String name, LatLng koords){
         this.nr = nr;
@@ -54,6 +57,7 @@ public class Waypoint {
                 ", koords=" + koords +
                 ", lastVisitDate=" + lastVisitDate +
                 ", visitCounts=" + visitCounts +
+                ", upgrades=" + upgrades +
                 ", growDuration=" + growDuration/1000 + "sec" +
                 '}';
     }
@@ -73,6 +77,7 @@ public class Waypoint {
         }
         ob.put("storageCap", getStorageCap());
         ob.put("visitCounts", getVisitCounts());
+        ob.put("upgrades", getUpgrades());
         return ob;
     }
     public static Waypoint fromJSONObject(JSONObject o) throws JSONException {
@@ -88,6 +93,7 @@ public class Waypoint {
         }
         w.setStorageCap(o.getLong("storageCap"));
         w.setVisitCounts(o.getLong("visitCounts"));
+        w.setUpgrades(o.getInt("upgrades"));
         return w;
     }
 
@@ -176,5 +182,17 @@ public class Waypoint {
 
     public void setStorageCap(long storageCap) {
         this.storageCap = storageCap;
+    }
+
+    public int getUpgrades() {
+        return upgrades;
+    }
+
+    public void setUpgrades(int upgrades) {
+        this.upgrades = upgrades;
+    }
+
+    public static String[] getUpgNames() {
+        return UPG_NAMES;
     }
 }

@@ -142,17 +142,24 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         setButtonsEnabledState();
 
         // homebase text
-        String castleStatus = "Hauptburg: ";
+        String castleStatus = "Hauptsitz: ";
         if(Castle.getWaypoints().isEmpty()){
             castleStatus += "- nicht erstellt -";
         } else {
             Waypoint w = Castle.getWaypoints().get(0);
-            castleStatus += "\n" + w.getName() + ": " + w.getVisitCounts() + "x\n";
-            castleStatus += "tax to collect: " + w.calcStorage() + " gold.";
+            castleStatus += Waypoint.UPG_NAMES[w.getUpgrades()];
+            castleStatus += "\n\"" + w.getName() + "\"\n";
+            castleStatus += "bereit liegende Steuern: " + w.calcStorage() + " Gold.";
         }
         // resources in home-storage
+        castleStatus += "\n\nRessourcen:";
         for(int i=0; i<Waypoint.RES_NAMES.length; i++){
-            castleStatus += "\n" + Waypoint.RES_NAMES[i] + ": " + Castle.getRes(i);
+            if(i%2==0){
+                castleStatus+="\n";
+            }else{
+                castleStatus+="\t\t\t";
+            }
+            castleStatus += Waypoint.RES_NAMES[i] + ": " + Castle.getRes(i);
         }
         castleStatus += "\n";
         TextView castleTextView = (TextView) findViewById(R.id.castleTextView);
@@ -160,37 +167,43 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
 
         // outpost 1
         TextView tower1TextView = (TextView) findViewById(R.id.tower1TextView);
-        String tower1Status = "Aussenposten 1:";
+        String tower1Status = "";
         if (Castle.getWaypoints().size() >=2){
             Waypoint w = Castle.getWaypoints().get(1);
-            tower1Status += "\n" + w.getName() + ": " + w.getVisitCounts() + "x, ";
-            tower1Status += "in storage: " + w.calcStorage();
+            tower1Status += "\"" + w.getName() + "\"\n";
+            tower1Status += "Wald gesichert durch: ";
+            tower1Status += Waypoint.UPG_NAMES[w.getUpgrades()];
+            tower1Status += "\nlagernd: " + w.calcStorage() + " " + Waypoint.RES_NAMES[1] + "\n";
         } else {
-            tower1Status += "- nicht erstellt -";
+            tower1Status += "- Wald -";
         }
         tower1TextView.setText(tower1Status);
 
         // outpost 2
         TextView tower2TextView = (TextView) findViewById(R.id.tower2TextView);
-        String tower2Status = "Aussenposten 2:";
+        String tower2Status = "";
         if (Castle.getWaypoints().size() >=3){
             Waypoint w = Castle.getWaypoints().get(2);
-            tower2Status += "\n" + w.getName() + ": " + w.getVisitCounts() + "x, ";
-            tower2Status += "in storage: " + w.calcStorage();
+            tower2Status += "\"" + w.getName() + "\"\n";
+            tower2Status += "Steinbruch gesichert durch: ";
+            tower2Status += Waypoint.UPG_NAMES[w.getUpgrades()];
+            tower2Status += "\nlagernd: " + w.calcStorage() + " " + Waypoint.RES_NAMES[2] + "\n";
         } else {
-            tower2Status += "- nicht erstellt -";
+            tower2Status += "- Steinbruch -";
         }
         tower2TextView.setText(tower2Status);
 
         // outpost 3
         TextView tower3TextView = (TextView) findViewById(R.id.tower3TextView);
-        String tower3Status = "Aussenposten 3:";
+        String tower3Status = "";
         if (Castle.getWaypoints().size() >=4){
             Waypoint w = Castle.getWaypoints().get(3);
-            tower3Status += "\n" + w.getName() + ": " + w.getVisitCounts() + "x, ";
-            tower3Status += "in storage: " + w.calcStorage();
+            tower3Status += "\"" + w.getName() + "\"\n";
+            tower3Status += "Minen gesichert durch: ";
+            tower3Status += Waypoint.UPG_NAMES[w.getUpgrades()];
+            tower3Status += "\nlagernd: " + w.calcStorage() + " " + Waypoint.RES_NAMES[3] + "\n";
         } else {
-            tower3Status += "- nicht erstellt -";
+            tower3Status += "- Minen -";
         }
         tower3TextView.setText(tower3Status);
 
@@ -272,6 +285,25 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         mGeofencingClient.removeGeofences(getGeofencePendingIntent()).addOnCompleteListener(this);
     }
 
+    private void upgradeWaypoint(Waypoint w) {
+        long holz = Castle.getRes(1);
+        long stein = Castle.getRes(2);
+        int targetLevel = w.getUpgrades()+1;
+        long kostenHolz = (long)Math.pow(5, targetLevel-1);
+        long kostenStein = (long)Math.pow(5, targetLevel-1);
+        if(kostenStein <=stein && kostenHolz <= holz){
+            Castle.setRes(1, holz-kostenHolz);
+            Castle.setRes(2, stein-kostenStein);
+            w.setUpgrades(targetLevel);
+            w.setStorageCap(w.getStorageCap()+1);
+            w.setGrowDuration((long)(w.getGrowDuration()*7.0/8.0));
+            Castle.saveWorld(this);
+            refreshStatus();
+        } else {
+            Toast.makeText(this, kostenHolz+" Holz und "+kostenStein+" Stein benötigt.", Toast.LENGTH_LONG).show();
+        }
+    }
+
     public void castleButtonHandler(View view){
         if (Castle.getWaypoints().isEmpty()) {
             Waypoint wp = new Waypoint(0, "Drosselnest", new LatLng(48.770303, 12.856623));
@@ -282,9 +314,10 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             refreshStatus();
 
         } else {
-            // TODO upgrade?
+            upgradeWaypoint(Castle.getWaypoints().get(0));
         }
     }
+
 
     public void tower1ButtonHandler(View view){
         if (Castle.getWaypoints().size()<2) {
@@ -295,7 +328,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             performPendingGeofenceTask();
             refreshStatus();
         } else {
-            // TODO upgrade?
+            upgradeWaypoint(Castle.getWaypoints().get(1));
         }
     }
 
@@ -308,7 +341,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             performPendingGeofenceTask();
             refreshStatus();
         } else {
-            // TODO upgrade?
+            upgradeWaypoint(Castle.getWaypoints().get(2));
         }
     }
 
@@ -321,7 +354,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             performPendingGeofenceTask();
             refreshStatus();
         } else {
-            // TODO upgrade?
+            upgradeWaypoint(Castle.getWaypoints().get(3));
         }
     }
 
@@ -423,29 +456,37 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         // castle Button:
         if(Castle.getWaypoints().isEmpty()){
             mCastleButton.setEnabled(true);
+            mCastleButton.setText("Fahne setzen");
         } else {
-            mCastleButton.setEnabled(false);
+            mCastleButton.setEnabled(true);
+            mCastleButton.setText("befestigen");
         }
 
         // tower 1 button:
         if(Castle.getWaypoints().size()==1){
             mTower1Button.setEnabled(true);
+            mTower1Button.setText("Fahne setzen");
         } else {
-            mTower1Button.setEnabled(false);
+            mTower1Button.setEnabled(true);
+            mTower1Button.setText("befestigen");
         }
 
         // tower 2 button:
         if(Castle.getWaypoints().size()==2){
             mTower2Button.setEnabled(true);
+            mTower2Button.setText("Fahne setzen");
         } else {
-            mTower2Button.setEnabled(false);
+            mTower2Button.setEnabled(true);
+            mTower2Button.setText("befestigen");
         }
 
         // tower 3 button:
         if(Castle.getWaypoints().size()==3){
             mTower3Button.setEnabled(true);
+            mTower3Button.setText("Fahne setzen");
         } else {
-            mTower3Button.setEnabled(false);
+            mTower3Button.setEnabled(true);
+            mTower3Button.setText("befestigen");
         }
 
 

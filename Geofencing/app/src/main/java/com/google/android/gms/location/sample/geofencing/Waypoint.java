@@ -18,7 +18,7 @@ public class Waypoint {
 
     public static final String[] RES_NAMES = {"Gold", "Holz", "Stein", "Eisen"};
 
-    public static final String[] UPG_NAMES = {"Fahne", "Wachhäuschen", "Wachgebäude", "Wachgebäude mit Palisaden", "Kaserne", "Burg", "Festung", "Stronghold"};
+    public static final String[] UPG_NAMES = {"Fahne", "Wachhäuschen", "Wachgebäude", "Wachgebäude mit Palisaden", "Kaserne", "Burg", "Festung", "Drachenhort"};
 
     private int nr;
     private String name;

@@ -467,8 +467,13 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             mTower1Button.setEnabled(true);
             mTower1Button.setText("Fahne setzen");
         } else {
-            mTower1Button.setEnabled(true);
-            mTower1Button.setText("befestigen");
+            if(Castle.getWaypoints().size()<1){
+                mTower1Button.setEnabled(false);
+                mTower1Button.setText("");
+            } else {
+                mTower1Button.setEnabled(true);
+                mTower1Button.setText("befestigen");
+            }
         }
 
         // tower 2 button:
@@ -476,8 +481,14 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             mTower2Button.setEnabled(true);
             mTower2Button.setText("Fahne setzen");
         } else {
-            mTower2Button.setEnabled(true);
-            mTower2Button.setText("befestigen");
+            if(Castle.getWaypoints().size()<2){
+                mTower2Button.setEnabled(false);
+                mTower2Button.setText("");
+            } else {
+                mTower2Button.setEnabled(true);
+                mTower2Button.setText("befestigen");
+            }
+
         }
 
         // tower 3 button:
@@ -485,10 +496,16 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             mTower3Button.setEnabled(true);
             mTower3Button.setText("Fahne setzen");
         } else {
-            mTower3Button.setEnabled(true);
-            mTower3Button.setText("befestigen");
+            if(Castle.getWaypoints().size()<3){
+                mTower3Button.setEnabled(false);
+                mTower3Button.setText("");
+            } else {
+                mTower3Button.setEnabled(true);
+                mTower3Button.setText("befestigen");
+            }
         }
-
+        // TODO einblenden wieviel ein upgrade kostet und button ggfs ausgrauen
+    // TODO absichern, damit niemand 8 oder öfter mal upgradet
 
     }
 

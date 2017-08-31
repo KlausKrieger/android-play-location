@@ -502,6 +502,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         Castle.setRes(0, Castle.getRes(0)-1);
         Castle.setRes(3, Castle.getRes(3)-1);
         Castle.setSoldiers(Castle.getSoldiers()+1);
+        Castle.saveWorld(this);
         updateUI();
     }
 

@@ -296,7 +296,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             Waypoint w = Castle.getWaypoints().get(0);
             castleStatus += Waypoint.UPG_NAMES[w.getUpgrades()];
             castleStatus += "\n\"" + w.getName() + "\"\n";
-            castleStatus += "bereit liegende Steuern: " + w.calcStorage() + " Gold.";
+            castleStatus += "bereit liegende Steuern: " + w.calcStorage() + "/" + w.getStorageCap() + " Gold.";
         }
         // resources in home-storage
         castleStatus += "\n\nRessourcen:";
@@ -320,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             tower1Status += "\"" + w.getName() + "\"\n";
             tower1Status += "Wald gesichert durch: ";
             tower1Status += Waypoint.UPG_NAMES[w.getUpgrades()];
-            tower1Status += "\nlagernd: " + w.calcStorage() + " " + Waypoint.RES_NAMES[1] + "\n";
+            tower1Status += "\nlagernd: " + w.calcStorage() + "/" + w.getStorageCap() + " " + Waypoint.RES_NAMES[1] + "\n";
         } else {
             tower1Status += "- Wald -";
         }
@@ -334,7 +334,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             tower2Status += "\"" + w.getName() + "\"\n";
             tower2Status += "Steinbruch gesichert durch: ";
             tower2Status += Waypoint.UPG_NAMES[w.getUpgrades()];
-            tower2Status += "\nlagernd: " + w.calcStorage() + " " + Waypoint.RES_NAMES[2] + "\n";
+            tower2Status += "\nlagernd: " + w.calcStorage() + "/" + w.getStorageCap() + " " + Waypoint.RES_NAMES[2] + "\n";
         } else {
             tower2Status += "- Steinbruch -";
         }
@@ -348,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             tower3Status += "\"" + w.getName() + "\"\n";
             tower3Status += "Minen gesichert durch: ";
             tower3Status += Waypoint.UPG_NAMES[w.getUpgrades()];
-            tower3Status += "\nlagernd: " + w.calcStorage() + " " + Waypoint.RES_NAMES[3] + "\n";
+            tower3Status += "\nlagernd: " + w.calcStorage() + "/" + w.getStorageCap() + " " + Waypoint.RES_NAMES[3] + "\n";
         } else {
             tower3Status += "- Minen -";
         }
@@ -463,7 +463,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
                                 // Got last known location. In some rare situations this can be null.
                                 if (location != null) {
                                     // create waypoint, register geofences and refresh:
-                                    if (location.getAccuracy() <= 15) {
+                                    if (location.getAccuracy() <= 20) { // TODO Konstante
                                         // TODO check distance to other waypoints
                                         Waypoint wp = new Waypoint(wpId, name, new LatLng(location.getLatitude(), location.getLongitude()));
                                         Castle.getWaypoints().put(wp.getNr(), wp);

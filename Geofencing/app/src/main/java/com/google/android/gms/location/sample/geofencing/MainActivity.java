@@ -106,6 +106,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
 
     // Buttons for build/upgrade castle and towers
     private Button mCastleButton;
+    private Button mSoldierButton;
     private Button mTower1Button;
     private Button mTower2Button;
     private Button mTower3Button;
@@ -156,6 +157,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         mAddGeofencesButton = (Button) findViewById(R.id.add_geofences_button);
         mRemoveGeofencesButton = (Button) findViewById(R.id.remove_geofences_button);
         mCastleButton = (Button) findViewById(R.id.castleButton);
+        mSoldierButton = (Button) findViewById(R.id.soldierButton);
         mTower1Button = (Button) findViewById(R.id.tower1Button);
         mTower2Button = (Button) findViewById(R.id.tower2Button);
         mTower3Button = (Button) findViewById(R.id.tower3Button);
@@ -311,6 +313,10 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         castleStatus += "\n";
         TextView castleTextView = (TextView) findViewById(R.id.castleTextView);
         castleTextView.setText(castleStatus);
+
+        // soldiers
+        TextView soldierTextView = (TextView) findViewById(R.id.soldierTextView);
+        soldierTextView.setText("Soldaten: " + Castle.getSoldiers());
 
         // outpost 1
         TextView tower1TextView = (TextView) findViewById(R.id.tower1TextView);
@@ -492,6 +498,12 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         handleWaypointButton(0, "Solace");
     }
 
+    public void soldierButtonHandler(View view){
+        Castle.setRes(0, Castle.getRes(0)-1);
+        Castle.setRes(3, Castle.getRes(3)-1);
+        Castle.setSoldiers(Castle.getSoldiers()+1);
+        updateUI();
+    }
 
     public void tower1ButtonHandler(View view){
         handleWaypointButton(1, "Düsterwald");
@@ -607,6 +619,13 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         } else {
             mCastleButton.setEnabled(true);
             mCastleButton.setText("befestigen");
+        }
+
+        // soldier button
+        if(Castle.getRes(0)>0 && Castle.getRes(3)>0){
+            mSoldierButton.setEnabled(true);
+        }else {
+            mSoldierButton.setEnabled(false);
         }
 
         // tower 1 button:

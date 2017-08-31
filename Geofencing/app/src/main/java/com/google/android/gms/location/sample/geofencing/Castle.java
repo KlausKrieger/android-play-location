@@ -25,7 +25,7 @@ public class Castle {
 
     private static Map<Integer, Waypoint> waypoints = new HashMap<>();
 
-
+    private static long soldiers = 0;
 
 
     /**
@@ -62,6 +62,14 @@ public class Castle {
         Castle.waypoints = waypoints;
     }
 
+    public static long getSoldiers() {
+        return soldiers;
+    }
+
+    public static void setSoldiers(long soldiers) {
+        Castle.soldiers = soldiers;
+    }
+
     public static void loadWorld(Context ctx){
         try {
             SharedPreferences p = PreferenceManager.getDefaultSharedPreferences(ctx);
@@ -84,6 +92,9 @@ public class Castle {
                     waypoints.put(w.getNr(), w);
                 }
             }
+
+            // soldiers
+            soldiers = p.getLong("soldiers", 0);
 
         } catch (Exception e) {
             String errortext = "error while loading: " + e.getMessage();
@@ -110,6 +121,9 @@ public class Castle {
             JSONObject allWPs = new JSONObject();
             allWPs.put("waypoints", arr);
             editor.putString("waypoints", allWPs.toString());
+
+            // soldiers
+            editor.putLong("soldiers", soldiers);
 
             editor.commit();
         } catch (Exception e) {

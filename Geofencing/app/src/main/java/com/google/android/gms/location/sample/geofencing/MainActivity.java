@@ -17,12 +17,16 @@
 package com.google.android.gms.location.sample.geofencing;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Looper;
 import android.preference.PreferenceManager;
 import android.provider.Settings;
 import android.support.annotation.NonNull;
@@ -35,12 +39,24 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.common.api.ResolvableApiException;
+import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingClient;
 import com.google.android.gms.location.GeofencingRequest;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
 import java.util.ArrayList;
@@ -60,6 +76,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
     private static final String TAG = MainActivity.class.getSimpleName();
 
     private static final int REQUEST_PERMISSIONS_REQUEST_CODE = 34;
+    private static final int REQUEST_CHECK_SETTINGS = 0x1;
 
     /**
      * Tracks whether the user requested to add or remove geofences, or to do neither.
@@ -95,10 +112,43 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
 
     private PendingGeofenceTask mPendingGeofenceTask = PendingGeofenceTask.NONE;
 
+    private FusedLocationProviderClient mFusedLocationClient;
+    private LocationRequest mLocationRequest;
+    private LocationCallback mLocationCallback;
+    private SettingsClient mSettingsClient;
+    private LocationSettingsRequest mLocationSettingsRequest;
+    private Location mCurrentLocation;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main_activity);
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        mSettingsClient = LocationServices.getSettingsClient(this);
+
+        // TODO und location updates ausschalten oder abschwächen, sobald alle gebaut sind
+
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+        mLocationRequest.setInterval(4 * 1000); // in ms
+        mLocationRequest.setFastestInterval(2 * 1000);
+        // TODO weitere Parameter für request ?
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
+        builder.addLocationRequest(mLocationRequest);
+        mLocationSettingsRequest = builder.build();
+
+        mLocationCallback = new LocationCallback() {
+            @Override
+            public void onLocationResult(LocationResult locationResult) {
+                for (Location location : locationResult.getLocations()) {
+                    ((TextView) findViewById(R.id.curLocTextView)).setText("you are at "
+                    + location.getLatitude() + " " + location.getLongitude() + " +/-" + location.getAccuracy() + "m");
+                    mCurrentLocation = location;
+                }
+            };
+        };
+
 
         Castle.loadWorld(this);
 
@@ -134,10 +184,107 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
 
 
 
-        refreshStatus();
+        updateUI();
     }
 
-    private void refreshStatus(){
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            // Check for the integer request code originally supplied to startResolutionForResult().
+            case REQUEST_CHECK_SETTINGS:
+                switch (resultCode) {
+                    case Activity.RESULT_OK:
+                        Log.i(TAG, "User agreed to make required location settings changes.");
+                        // Nothing to do. startLocationupdates() gets called in onResume again.
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        Log.i(TAG, "User chose not to make required location settings changes.");
+                        Toast.makeText(this, "dann wirds wohl nix mit uns...", Toast.LENGTH_LONG).show();
+                        break;
+                }
+                break;
+        }
+    }
+
+    private void stopLocationUpdates() {
+
+        // It is a good practice to remove location requests when the activity is in a paused or
+        // stopped state. Doing so helps battery performance and is especially
+        // recommended in applications that request frequent location updates.
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        setButtonsEnabledState();
+                    }
+                });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // Within {@code onPause()}, we remove location updates. Here, we resume receiving
+        // location updates if the user has requested them.
+        if (checkPermissions()) {
+            startLocationUpdates();
+        } else if (!checkPermissions()) {
+            requestPermissions();
+        }
+        updateUI();
+    }
+
+    private void startLocationUpdates() {
+        // Begin by checking if the device has the necessary location settings.
+        mSettingsClient.checkLocationSettings(mLocationSettingsRequest)
+                .addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+                    @Override
+                    public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                        Log.i(TAG, "All location settings are satisfied.");
+
+                        //noinspection MissingPermission
+                        mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                                mLocationCallback, Looper.myLooper());
+
+                        updateUI();
+                    }
+                })
+                .addOnFailureListener(this, new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        int statusCode = ((ApiException) e).getStatusCode();
+                        switch (statusCode) {
+                            case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                                Log.i(TAG, "Location settings are not satisfied. Attempting to upgrade " +
+                                        "location settings ");
+                                try {
+                                    // Show the dialog by calling startResolutionForResult(), and check the
+                                    // result in onActivityResult().
+                                    ResolvableApiException rae = (ResolvableApiException) e;
+                                    rae.startResolutionForResult(MainActivity.this, REQUEST_CHECK_SETTINGS);
+                                } catch (IntentSender.SendIntentException sie) {
+                                    Log.i(TAG, "PendingIntent unable to execute request.");
+                                }
+                                break;
+                            case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                                String errorMessage = "Location settings are inadequate, and cannot be " +
+                                        "fixed here. Fix in Settings.";
+                                Log.e(TAG, errorMessage);
+                                Toast.makeText(MainActivity.this, errorMessage, Toast.LENGTH_LONG).show();
+                                //mRequestingLocationUpdates = false; // TODO aufhören mit locationupdates
+                        }
+
+                        updateUI();
+                    }
+                });
+    }
+
+    private void updateUI(){
 
         setButtonsEnabledState();
 
@@ -298,64 +445,64 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             w.setStorageCap(w.getStorageCap()+1);
             w.setGrowDuration((long)(w.getGrowDuration()*7.0/8.0));
             Castle.saveWorld(this);
-            refreshStatus();
+            updateUI();
         } else {
             Toast.makeText(this, kostenHolz+" Holz und "+kostenStein+" Stein benötigt.", Toast.LENGTH_LONG).show();
         }
     }
 
-    public void castleButtonHandler(View view){
-        if (Castle.getWaypoints().isEmpty()) {
-            Waypoint wp = new Waypoint(0, "Drosselnest", new LatLng(48.770303, 12.856623));
-            Castle.getWaypoints().put(wp.getNr(), wp);
-            Castle.saveWorld(this);
-            populateGeofenceList();
-            performPendingGeofenceTask();
-            refreshStatus();
 
+    private void handleWaypointButton(final int wpId, final String name) {
+        if (Castle.getWaypoints().size()==wpId) {
+            // fetch location and create new Waypoint...
+            try {
+                mFusedLocationClient.getLastLocation()
+                        .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                            @Override
+                            public void onSuccess(Location location) {
+                                // Got last known location. In some rare situations this can be null.
+                                if (location != null) {
+                                    // create waypoint, register geofences and refresh:
+                                    if (location.getAccuracy() <= 15) {
+                                        // TODO check distance to other waypoints
+                                        Waypoint wp = new Waypoint(wpId, name, new LatLng(location.getLatitude(), location.getLongitude()));
+                                        Castle.getWaypoints().put(wp.getNr(), wp);
+                                        Castle.saveWorld(MainActivity.this);
+                                        populateGeofenceList();
+                                        performPendingGeofenceTask();
+                                        updateUI();
+                                    } else {
+                                        Toast.makeText(MainActivity.this, "GPS aktuell zu ungenau", Toast.LENGTH_LONG).show();
+                                    }
+                                } else {
+                                    Toast.makeText(MainActivity.this, "Failed to determine location!", Toast.LENGTH_LONG).show();
+                                }
+                            }
+                        });
+            } catch (SecurityException e){
+                Toast.makeText(this, "Access to location required!", Toast.LENGTH_LONG).show();
+                return;
+            }
         } else {
-            upgradeWaypoint(Castle.getWaypoints().get(0));
+            upgradeWaypoint(Castle.getWaypoints().get(wpId));
         }
+    }
+
+    public void castleButtonHandler(View view){
+        handleWaypointButton(0, "Solace");
     }
 
 
     public void tower1ButtonHandler(View view){
-        if (Castle.getWaypoints().size()<2) {
-            Waypoint wp = new Waypoint(1, "Hügelland", new LatLng(48.769001, 12.857483));
-            Castle.getWaypoints().put(wp.getNr(), wp);
-            Castle.saveWorld(this);
-            populateGeofenceList();
-            performPendingGeofenceTask();
-            refreshStatus();
-        } else {
-            upgradeWaypoint(Castle.getWaypoints().get(1));
-        }
+        handleWaypointButton(1, "Düsterwald");
     }
 
     public void tower2ButtonHandler(View view){
-        if (Castle.getWaypoints().size()<3) {
-            Waypoint wp = new Waypoint(2, "Steinfeld", new LatLng(48.770392, 12.862328));
-            Castle.getWaypoints().put(wp.getNr(), wp);
-            Castle.saveWorld(this);
-            populateGeofenceList();
-            performPendingGeofenceTask();
-            refreshStatus();
-        } else {
-            upgradeWaypoint(Castle.getWaypoints().get(2));
-        }
+        handleWaypointButton(2, "Hohe Klamm");
     }
 
     public void tower3ButtonHandler(View view){
-        if (Castle.getWaypoints().size()<4) {
-            Waypoint wp = new Waypoint(3, "Vulkan", new LatLng(48.765591,12.862354));
-            Castle.getWaypoints().put(wp.getNr(), wp);
-            Castle.saveWorld(this);
-            populateGeofenceList();
-            performPendingGeofenceTask();
-            refreshStatus();
-        } else {
-            upgradeWaypoint(Castle.getWaypoints().get(3));
-        }
+        handleWaypointButton(3, "Eherne Minen");
     }
 
     /**

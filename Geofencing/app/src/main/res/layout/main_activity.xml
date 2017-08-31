@@ -50,6 +50,12 @@
     </LinearLayout>
 
 
+    <TextView
+        android:id="@+id/curLocTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:text="TextView" />
 
     <LinearLayout
         android:layout_width="match_parent"

@@ -14,8 +14,6 @@ import java.util.Date;
 
 public class Waypoint {
 
-    public static final float GEOFENCE_RADIUS_IN_METERS = 100;
-
     public static final String[] RES_NAMES = {"Gold", "Holz", "Stein", "Eisen"};
 
     public static final String[] UPG_NAMES = {"Fahne", "Wachhäuschen", "Wachgebäude", "Wachgebäude mit Palisaden", "Kaserne", "Burg", "Festung", "Drachenhort"};
@@ -26,7 +24,7 @@ public class Waypoint {
     private Date lastVisitDate = null;
     private long lastHarvestTime = 0;
     private long visitCounts = 0;
-    private long growDuration = 20 * 1000; // 20sec
+    private long growDuration = Constants.INITIAL_GROW_DURATION;
     private long storageCap = 3;
     private int upgrades = 0;
 

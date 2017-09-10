@@ -574,12 +574,12 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
                     .setCircularRegion(
                             entry.getValue().getKoords().latitude,
                             entry.getValue().getKoords().longitude,
-                            Waypoint.GEOFENCE_RADIUS_IN_METERS
+                            Constants.GEOFENCE_RADIUS_IN_METERS
                     )
 
                     // Set the expiration duration of the geofence. This geofence gets automatically
                     // removed after this period of time.
-                    .setExpirationDuration(Constants.GEOFENCE_EXPIRATION_IN_MILLISECONDS)
+                    .setExpirationDuration(Geofence.NEVER_EXPIRE)
 
                     // Set the transition types of interest. Alerts are only generated for these
                     // transition. We track entry and exit transitions in this sample.

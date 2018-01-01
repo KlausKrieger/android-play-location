@@ -1,6 +1,7 @@
 package com.google.android.gms.location.sample.geofencing;
 
 import android.app.IntentService;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -135,7 +136,7 @@ public class GeofenceTransitionsIntentService extends IntentService {
                 stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
 
         // Get a notification builder that's compatible with platform versions >= 4
-        NotificationCompat.Builder builder = new NotificationCompat.Builder(this);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NotificationChannel.DEFAULT_CHANNEL_ID);
 
         // Define the notification settings.
         builder.setSmallIcon(R.drawable.ic_launcher)
@@ -157,6 +158,8 @@ public class GeofenceTransitionsIntentService extends IntentService {
 
         // Issue the notification
         mNotificationManager.notify(0, builder.build());
+
+        // TODO ab target 26 muss eine notification mit channel gesendet werden?!
     }
 
     /**

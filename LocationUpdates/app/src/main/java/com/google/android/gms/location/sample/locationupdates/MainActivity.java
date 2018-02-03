@@ -45,14 +45,6 @@ import java.util.Locale;
 /**
  * Using location settings.
  * <p/>
- * Uses the {@link com.google.android.gms.location.SettingsApi} to ensure that the device's system
- * settings are properly configured for the app's location needs. When making a request to
- * Location services, the device's system settings may be in a state that prevents the app from
- * obtaining the location data that it needs. For example, GPS or Wi-Fi scanning may be switched
- * off. The {@code SettingsApi} makes it possible to determine if a device's system settings are
- * adequate for the location request, and to optionally invoke a dialog that allows the user to
- * enable the necessary settings.
- * <p/>
  * This sample allows the user to request location updates using the ACCESS_FINE_LOCATION setting
  * (as specified in AndroidManifest.xml).
  */
@@ -93,20 +85,9 @@ public class MainActivity extends AppCompatActivity {
     private FusedLocationProviderClient mFusedLocationClient;
 
     /**
-     * Provides access to the Location Settings API.
-     */
-    private SettingsClient mSettingsClient;
-
-    /**
      * Stores parameters for requests to the FusedLocationProviderApi.
      */
     private LocationRequest mLocationRequest;
-
-    /**
-     * Stores the types of location services the client is interested in using. Used for checking
-     * settings to determine if the device has optimal location settings.
-     */
-    private LocationSettingsRequest mLocationSettingsRequest;
 
     /**
      * Callback for Location events.
@@ -167,7 +148,6 @@ public class MainActivity extends AppCompatActivity {
         updateValuesFromBundle(savedInstanceState);
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        mSettingsClient = LocationServices.getSettingsClient(this);
 
         // Request vorbereiten (noch nicht abschicken)
         prepareLocationRequests();
@@ -196,11 +176,6 @@ public class MainActivity extends AppCompatActivity {
         mLocationRequest.setInterval(UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setFastestInterval(FASTEST_UPDATE_INTERVAL_IN_MILLISECONDS);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        // build LocationSettingsRequest
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder();
-        builder.addLocationRequest(mLocationRequest);
-        mLocationSettingsRequest = builder.build();
     }
 
     /**
@@ -291,6 +266,28 @@ public class MainActivity extends AppCompatActivity {
     }
 
     /**
+     * Removes location updates from the FusedLocationApi.
+     */
+    private void stopLocationUpdates() {
+        if (!mRequestingLocationUpdates) {
+            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
+            return;
+        }
+
+        // It is a good practice to remove location requests when the activity is in a paused or
+        // stopped state. Doing so helps battery performance and is especially
+        // recommended in applications that request frequent location updates.
+        mFusedLocationClient.removeLocationUpdates(mLocationCallback)
+                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        mRequestingLocationUpdates = false;
+                        setButtonsEnabledState();
+                    }
+                });
+    }
+
+    /**
      * Updates all UI fields.
      */
     private void updateUI() {
@@ -328,27 +325,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    /**
-     * Removes location updates from the FusedLocationApi.
-     */
-    private void stopLocationUpdates() {
-        if (!mRequestingLocationUpdates) {
-            Log.d(TAG, "stopLocationUpdates: updates never requested, no-op.");
-            return;
-        }
 
-        // It is a good practice to remove location requests when the activity is in a paused or
-        // stopped state. Doing so helps battery performance and is especially
-        // recommended in applications that request frequent location updates.
-        mFusedLocationClient.removeLocationUpdates(mLocationCallback)
-                .addOnCompleteListener(this, new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        mRequestingLocationUpdates = false;
-                        setButtonsEnabledState();
-                    }
-                });
-    }
 
     @Override
     public void onResume() {
@@ -446,7 +423,7 @@ public class MainActivity extends AppCompatActivity {
         if (requestCode == REQUEST_PERMISSIONS_REQUEST_CODE) {
             if (grantResults.length <= 0) {
                 // If user interaction was interrupted, the permission request is cancelled and you
-                // receive empty arrays.
+                // receive empty arrays
             } else if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 if (mRequestingLocationUpdates) {
                     startLocationUpdates();

@@ -1,5 +1,7 @@
 package com.google.android.gms.location.sample.geofencing;
 
+import android.location.Location;
+
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.maps.model.LatLng;
 
@@ -17,6 +19,8 @@ public class Waypoint {
     public static final String[] RES_NAMES = {"Gold", "Holz", "Stein", "Eisen"};
 
     public static final String[] UPG_NAMES = {"Fahne", "Wachhäuschen", "Wachgebäude", "Wachgebäude mit Palisaden", "Kaserne", "Burg", "Festung", "Drachenhort"};
+
+    public static final String[] DEFAULT_NAMES = {"Solace", "Düsterwald", "Hohe Klamm", "Eherne Minen"};
 
     private int nr;
     private String name;
@@ -118,6 +122,12 @@ public class Waypoint {
         return harvest;
     }
 
+    public String getGrowDurationAsString(){
+        long h = growDuration / 1000 / 60 / 60;
+        long m = growDuration / 1000 / 60 % 60;
+        return h + "h " + m + "min";
+    }
+
     public int getNr() {
         return nr;
     }
@@ -192,5 +202,20 @@ public class Waypoint {
 
     public static String[] getUpgNames() {
         return UPG_NAMES;
+    }
+
+    public float distanceInMeters(Location loc){
+        if (loc != null) {
+            float[] erg = new float[1];
+            Location.distanceBetween(koords.latitude, koords.longitude, loc.getLatitude(), loc.getLongitude(), erg);
+            return erg[0];
+        } else {
+            return Float.MAX_VALUE; // loc not known
+        }
+    }
+    public float distanceInMeters(Waypoint other){
+        float[] erg = new float[1];
+        Location.distanceBetween(koords.latitude, koords.longitude, other.getKoords().latitude, other.getKoords().longitude, erg);
+        return erg[0];
     }
 }

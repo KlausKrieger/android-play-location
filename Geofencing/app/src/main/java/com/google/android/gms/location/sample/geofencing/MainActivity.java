@@ -212,9 +212,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
         mFusedLocationClient.removeLocationUpdates(mLocationCallback)
                 .addOnCompleteListener(this, new OnCompleteListener<Void>() {
                     @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        ;
-                    }
+                    public void onComplete(@NonNull Task<Void> task) {}
                 });
     }
 
@@ -350,7 +348,7 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
             return;
         }
         // wird aktuell nie aufgerufen
-        mGeofencingClient.removeGeofences(getGeofencePendingIntent()).addOnCompleteListener(this);
+        //mGeofencingClient.removeGeofences(getGeofencePendingIntent()).addOnCompleteListener(TODO oder this überarbeiten);
     }
 
     private void upgradeWaypoint(Waypoint w) {
@@ -420,14 +418,11 @@ public class MainActivity extends AppCompatActivity implements OnCompleteListene
     @Override
     public void onComplete(@NonNull Task<Void> task) {
         if (task.isSuccessful()) {
-            updateGeofencesAdded(!isGeofencesAdded());
-
-            int messageId = isGeofencesAdded() ? R.string.geofences_added :
-                    R.string.geofences_removed;
-            Toast.makeText(this, getString(messageId), Toast.LENGTH_SHORT).show();
+            Toast.makeText(this, getString(R.string.geofences_added), Toast.LENGTH_SHORT).show();
         } else {
             // Get the status code for the error and log it using a user-friendly message.
             String errorMessage = GeofenceErrorMessages.getErrorString(this, task.getException());
+            Toast.makeText(this, errorMessage, Toast.LENGTH_SHORT).show();
             Log.w(TAG, errorMessage);
         }
     }

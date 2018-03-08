@@ -3,6 +3,9 @@ package com.google.android.gms.location.sample.geofencing;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Handler;
+import android.os.Looper;
+import android.widget.Toast;
 
 /**
  * Receiver for geofence transition changes.

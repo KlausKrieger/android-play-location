@@ -2,7 +2,7 @@
 
 <resources>
 
-    <string name="app_name">Knight Partol</string>
+    <string name="app_name">Knight Patrol</string>
 
     <!-- Buttons strings -->
     <string name="add_geofences">Add geofences</string>

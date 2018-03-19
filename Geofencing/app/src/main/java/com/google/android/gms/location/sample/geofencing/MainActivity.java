@@ -59,6 +59,7 @@ import java.util.Map;
 // distanzcheck zu anderen wps einbauen beim bauen
 // warumkommen zwei berechtigungsabfragen zu beginn?
 // TODO s und warnings durchsehen
+// TODO loc +- ohne Nachkommastellen
 
 /**
  * Demonstrates how to create and remove geofences using the GeofencingApi. Uses an IntentService

@@ -72,6 +72,8 @@ public class GeofenceTransitionsJobIntentService extends JobIntentService {
              //   || geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT
                 ) {
 
+            Castle.loadWorld(this);
+
             // Get the geofences that were triggered. A single event can trigger multiple geofences.
             List<Geofence> triggeringGeofences = geofencingEvent.getTriggeringGeofences();
 
@@ -83,8 +85,6 @@ public class GeofenceTransitionsJobIntentService extends JobIntentService {
 
                 long harvest = w.harvest();
                 Castle.setRes(w.getNr(), Castle.getRes(w.getNr()) + harvest);
-
-                Castle.saveWorld(this);
             }
 
             // Get the transition details as a String.
@@ -93,6 +93,9 @@ public class GeofenceTransitionsJobIntentService extends JobIntentService {
 
             // Send notification and log the transition details.
             sendNotification(geofenceTransitionDetails);
+
+            Castle.saveWorld(this);
+
             Log.i(TAG, geofenceTransitionDetails);
         } else {
             // Log the error.

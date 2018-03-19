@@ -1,9 +1,10 @@
 apply plugin: 'com.android.application'
 
 android {
+    signingConfigs {
+    }
     compileSdkVersion 27
     buildToolsVersion '27.0.3'
-
     defaultConfig {
         applicationId "com.google.android.gms.location.sample.geofencing"
         minSdkVersion 16
@@ -25,7 +26,6 @@ dependencies {
     })
     compile 'com.android.support:appcompat-v7:27.1.0'
     testCompile 'junit:junit:4.12'
-
     compile 'com.android.support:design:27.1.0'
     compile 'com.google.android.gms:play-services-location:11.8.0'
     compile 'com.google.android.gms:play-services-maps:11.8.0'
